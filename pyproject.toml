@@ -8,6 +8,7 @@ authors = ["Your Name <you@example.com>"]
 python = "^3.8"
 python-dotenv = "^0.17.1"
 discord = "^1.0.1"
+datamart-isi = "^2.1.10"
 
 [tool.poetry.dev-dependencies]
 
