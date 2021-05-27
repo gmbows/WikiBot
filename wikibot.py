@@ -61,14 +61,25 @@ class WikiBot(object):
     json = self.get_json_from_token(token)
     return json[1][0]
   
-  def get_sections(self,wiki_object):
-    return [section.title for section in wiki_object.sections]
+  def get_section_titles(self,wiki_sections,level=0):
+    sections = []
+    for section in wiki_sections:
+      sections.append((level,section.title))
+      sections.extend(self.get_section_titles(section.sections,level+1))
+    return sections
   
   def get_section(self,wiki_object,section_name):
-    for section in wiki_object.sections:
+    for section in self.get_sections(wiki_object.sections):
       if(section.title.lower().startswith(section_name.lower())):
         return section
     return None
+
+  def get_sections(self,wiki_sections):
+    sections = []
+    for section in wiki_sections:
+      sections.append(section)
+      sections.extend(self.get_sections(section.sections))
+    return sections
 	
   def get_section_text(self,section,level=0):
     text = "**" + section.title +"**"+ ": \n"+section.text[0:100]+"\n"
@@ -107,7 +118,7 @@ class WikiBot(object):
         embed = discord.Embed(title=wiki_object.title,url=url, color=0xdc143c,type="rich")
         url = self.get_thumbnail(wiki_object.title)
         if(url != None):
-         print(embed.set_image(url=url))
+         embed.set_image(url=url)
         embed.add_field(name="Overview", value=wiki_object.summary[0:200],inline=False)
         await ctx.send(None,embed=embed)
 
@@ -115,11 +126,34 @@ class WikiBot(object):
         await ctx.send(wiki_object.fullurl)
       elif(query == "sections"):
         text = []
+        lastlevel = 0
+        overflow = False
+        header = "Sections"
+        other = ["See also","Notes","References","Sources","External links"]
         article_url = wiki_object.fullurl
-        for section in wiki_object.sections:
-          text.append("[{0}]({1})".format(section.title,article_url+"#"+section.title.replace(" ","%20")))
         embed = discord.Embed(title=wiki_object.title,url=article_url, color=0xdc143c,type="rich")
-        embed.add_field(name="Sections", value="\n".join(text),inline=False)
+        for section in self.get_section_titles(wiki_object.sections):
+          temp_header = header
+          if(section[1] in other and "other" not in temp_header):
+            if(overflow):
+              temp_header += " (cont.)"
+            embed.add_field(name=temp_header, value="\n".join(text),inline=False)
+            text=[]
+            header += " (other)"
+          if(section[0] > lastlevel):
+            newtext = ("     "*section[0])+"[{0}]({1})".format(section[1],article_url+"#"+section[1].replace(" ","_"))
+          else:
+            newtext = ("     "*section[0])+"[{0}]({1})".format(section[1],article_url+"#"+section[1].replace(" ","_"))
+          lastlevel = section[0]
+          if(len(newtext)+len("\n".join(text)) >= 1024):
+            if(overflow):
+              temp_header += " (cont.)"
+            embed.add_field(name=temp_header, value="\n".join(text),inline=False)
+            overflow = True
+            text=[newtext]
+          else: 
+            text.append(newtext)
+        embed.add_field(name=temp_header, value="\n".join(text),inline=False)
         await ctx.send(None,embed=embed)
       elif(query == "categories"):
         text = []
