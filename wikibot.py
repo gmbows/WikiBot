@@ -13,9 +13,13 @@ def search_wiki(url):
 class WikiBot(object):
   def __init__(self):
 
+    self.base_wiki_url = "https://en.wikipedia.org/wiki/{0}" #title
     self.wiki_url = "https://en.wikipedia.org/w/api.php?action=opensearch&search={0}&limit=1&namespace=0&format=json"
     self.wiki_redirect_url = "https://en.wikipedia.org/w/api.php?action=query&format=json&titles={0}&redirects"
     self.wiki_thumbnail_url = "https://en.wikipedia.org/w/api.php?action=query&titles={0}&prop=pageimages&format=json&pithumbsize=300"
+    self.wiki_page_images_url = "https://en.wikipedia.org/w/api.php?action=query&titles={0}&prop=images&format=json"
+    self.wiki_fetch_image_data_url = "https://en.wikipedia.org/w/api.php?action=query&titles=Image:{0}&prop=imageinfo&iiprop=url&format=json" #.format(filename)
+    self.wiki_category_url = "https://en.wikipedia.org/wiki/Category:{0}"
 
     self.wiki_api = wikipediaapi.Wikipedia('en')
 
@@ -38,6 +42,25 @@ class WikiBot(object):
       return title
     return redirects[0]["to"]
 
+  def get_thumbnail_alt(self,title):
+    filename = None
+    images = json.loads(requests.get(self.wiki_page_images_url.format(title)).content)
+    try:
+      print("Test1")
+      pageid = images["query"]["pages"].keys()
+      for id in pageid:
+       filename = images["query"]["pages"][id]["images"][0]["title"].replace("File:","")
+       break
+      print(filename)
+      file_data = json.loads(requests.get(self.wiki_fetch_image_data_url.format(filename)).content)
+      pageid = file_data["query"]["pages"].keys()
+      for id in pageid:
+        return file_data["query"]["pages"][id]["imageinfo"][0]["url"]
+    except:
+      print("Error")
+      return None
+    return None
+
   def get_thumbnail(self,title):
     title = self.get_redirect(title)
     content = json.loads(requests.get(self.wiki_thumbnail_url.format(title)).content)
@@ -46,8 +69,8 @@ class WikiBot(object):
       for id in pageid:
        return content["query"]["pages"][id]["thumbnail"]["source"]
     except:
-      return None
-    return thumbnail_url
+      return self.get_thumbnail_alt(title)
+    return None
 
   def get_json_from_token(self,token):
     url = self.wiki_url.format(token)
@@ -90,6 +113,21 @@ class WikiBot(object):
       text += self.get_section_text(subsection, level + 1)+"\n"
     return text 
 
+  def linkify(self,text,links):
+    return text
+    for link_text in sorted(links.keys()):
+      if(link_text.lower() in text.lower()):
+        wiki_object = self.wiki_api.page(self.get_article_title_from_token(link_text).replace(" ","_"))
+        if(not wiki_object.exists()):
+          print("error",link_text)
+          continue
+        text = text.replace(link_text,"[{0}]({1})".format(link_text,wiki_object.fullurl))
+        text = text.replace(link_text.lower(),"[{0}]({1})".format(link_text.lower(),wiki_object.fullurl))
+    return text
+
+  def get_sentences(self,text):
+    return text.split(". ")
+
   def init_events(self):
     @self.client.event
     async def on_ready():
@@ -115,13 +153,50 @@ class WikiBot(object):
         await ctx.send(wiki_object.summary[0:100])
       elif(query == "overview"):
         url = wiki_object.fullurl
-        embed = discord.Embed(title=wiki_object.title,url=url, color=0xdc143c,type="rich")
-        url = self.get_thumbnail(wiki_object.title)
-        if(url != None):
-         embed.set_image(url=url)
-        embed.add_field(name="Overview", value=wiki_object.summary[0:200],inline=False)
-        await ctx.send(None,embed=embed)
-
+        text = (self.get_sentences(wiki_object.summary)[0])+"."
+        if("may refer to:" in text):
+          cur_text = "This is a disambiguation page."
+          embed_title = wiki_object.title+" (disambiguation)"
+          embed = discord.Embed(title=embed_title,url=url, color=0xae99bd,type="rich")
+          embed.add_field(name="Overview", value=cur_text,inline=False)
+          #await ctx.send(None,embed=embed)
+          text = []
+          lastlevel = 0
+          overflow = False
+          header = "Related Pages"
+          other = ["See also","Notes","References","Sources","External links"]
+          article_url = wiki_object.fullurl
+          total=len(cur_text)+len(embed_title)+50
+          for key_name in sorted(wiki_object.links.keys()):
+            if "Help:" in key_name or "Talk:" in key_name:
+              continue
+            temp_header = header
+            newtext = "[{0}]({1})".format(key_name,self.base_wiki_url.format(key_name.replace(" ","_")))
+            if(len(newtext)+total >= 6000):
+              await ctx.send(None,embed=embed)
+              embed.clear_fields()
+              total=0
+            if(len(newtext)+len("\n".join(text)) >= 1024):
+              if(overflow):
+                temp_header += " (cont.)"
+              embed.add_field(name=temp_header, value="\n".join(text),inline=False)
+              total+=1024
+              overflow = True
+              text=[newtext]
+            else: 
+              text.append(newtext)
+          if(overflow):
+            temp_header = header+" (cont.)"
+          embed.add_field(name=temp_header, value="\n".join(text),inline=False)
+          await ctx.send(None,embed=embed)
+        else:
+          #Non-disambiguation page
+          embed = discord.Embed(title=wiki_object.title,url=url, color=0xae99bd,type="rich")
+          thumb_url = self.get_thumbnail(wiki_object.title)
+          if(thumb_url != None):
+            embed.set_image(url=thumb_url)
+          embed.add_field(name="Overview", value=text,inline=False)
+          await ctx.send(None,embed=embed)
       elif(query == "url"):
         await ctx.send(wiki_object.fullurl)
       elif(query == "sections"):
@@ -131,7 +206,8 @@ class WikiBot(object):
         header = "Sections"
         other = ["See also","Notes","References","Sources","External links"]
         article_url = wiki_object.fullurl
-        embed = discord.Embed(title=wiki_object.title,url=article_url, color=0xdc143c,type="rich")
+        total=0
+        embed = discord.Embed(title=wiki_object.title,url=article_url, color=0xae99bd,type="rich")
         for section in self.get_section_titles(wiki_object.sections):
           temp_header = header
           if(section[1] in other and "other" not in temp_header):
@@ -145,10 +221,15 @@ class WikiBot(object):
           else:
             newtext = ("     "*section[0])+"[{0}]({1})".format(section[1],article_url+"#"+section[1].replace(" ","_"))
           lastlevel = section[0]
+          if(len(newtext)+total >= 6000):
+            await ctx.send(None,embed=embed)
+            embed.clear_fields()
+            total=0
           if(len(newtext)+len("\n".join(text)) >= 1024):
             if(overflow):
               temp_header += " (cont.)"
             embed.add_field(name=temp_header, value="\n".join(text),inline=False)
+            total+=1024
             overflow = True
             text=[newtext]
           else: 
@@ -157,26 +238,46 @@ class WikiBot(object):
         await ctx.send(None,embed=embed)
       elif(query == "categories"):
         text = []
-        for category in sorted(wiki_object.categories.keys())[0:20]:
-          text.append(category[0:60])
-        await ctx.send("\n".join(text))
+        lastlevel = 0
+        overflow = False
+        header = "Categories"
+        article_url = wiki_object.fullurl
+        total=0
+        embed = discord.Embed(title=wiki_object.title,url=article_url, color=0xae99bd,type="rich")
+        for section in sorted(wiki_object.categories.keys()):
+          temp_header = header
+          newtext = "[{0}]({1})".format(section.replace("Category:",""),self.wiki_category_url.format(section.replace("Category:","").replace(" ","_")))
+          if(len(newtext)+total >= 6000):
+            await ctx.send(None,embed=embed)
+            embed.clear_fields()
+            total=0
+          if(len(newtext)+len("\n".join(text)) >= 1024):
+            if(overflow):
+              temp_header += " (cont.)"
+            embed.add_field(name=temp_header, value="\n".join(text),inline=False)
+            total+=1024
+            overflow = True
+            text=[newtext]
+          else: 
+            text.append(newtext)
+        if(overflow):
+          temp_header = header+ " (cont.)"
+        embed.add_field(name=temp_header, value="\n".join(text),inline=False)
+        await ctx.send(None,embed=embed)
       elif(query == "links"):
         text = []
         links = wiki_object.links
-        for link_text in sorted(links.keys())[0:20]:
-          text.append(str(link_text)+": "+str(links[link_text]))
+        for link_text in sorted(links.keys())[0:100]:
+          text.append(str(link_text))
         await ctx.send("\n".join(text))
       else:
-        try:
-          section_query = query
-        except:
-          await ctx.send("> Usage: `!search [query] section [section]`")
-          return
+        section_query = query
         section = self.get_section(wiki_object,section_query)
         if(section != None):
-          await ctx.send(self.get_section_text(section))
+          embed = discord.Embed(title=section.title+" ("+wiki_object.title+")",description=self.linkify(section.text[0:1024],wiki_object.links), color=0xEE8700,type="rich",url=wiki_object.fullurl+"#"+section.title.replace(" ","_"))
+          await ctx.send(None,embed=embed)
         else:
           embed = discord.Embed(title="Oh no!", color=0xEE8700,type="rich")
           embed.add_field(name="Issue:", value="Section \"{0}\" not found in article [{1}]({2})".format(section_query,title,wiki_object.fullurl), inline=False)
-          embed.add_field(name="Solution:", value="Use `!search {0} sections` for a list of sections in this article".format(title), inline=False)
+          embed.add_field(name="Solution:", value="Use `!search \"{0}\" sections` for a list of sections in this article".format(title), inline=False)
           await ctx.send(None,embed=embed)
