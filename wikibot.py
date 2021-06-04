@@ -43,13 +43,19 @@ class WikiBot(object):
 
     self.client.run(self.TOKEN)
 
+  def normalize_pageviews(self,view_dict):
+    for key in view_dict.keys():
+      if(view_dict[key] == None):
+        view_dict[key] = 0
+    return view_dict
+
   def get_pageviews(self,title):
     title = self.get_redirect(title)
     content = json.loads(requests.get(self.wiki_pageviews_url.format(title)).content)
     try:
       pageid = content["query"]["pages"].keys()
       for id in pageid:
-       return content["query"]["pages"][id]["pageviews"]
+       return self.normalize_pageviews(content["query"]["pages"][id]["pageviews"])
     except:
       return False
 
@@ -352,14 +358,17 @@ class WikiBot(object):
       views = self.get_pageviews(title)
       avg_views = sum(views.values())//len(views.values())
       self.generate_pageview_chart(title)
+      file = discord.File("chart.png")
 
+      embed.set_image(url="attachment://chart.png")
       embed.add_field(name="Popularity",value=popularity,inline=False)
       embed.add_field(name="Watchers",value=watchers,inline=False)
       embed.add_field(name="Sections",value=len(self.get_sections(wiki_object.sections)),inline=False)
       embed.add_field(name="Categories",value=len(wiki_object.categories),inline=False)
       embed.add_field(name="Links",value=len(wiki_object.links),inline=False)
       embed.add_field(name="Average daily pageviews / 60 days",value=avg_views,inline=False)
-      await ctx.send(None,embed=embed)
+
+      await ctx.send(None,file=file,embed=embed)
     else:
       section_query = query
       section = self.get_section(wiki_object,section_query)
