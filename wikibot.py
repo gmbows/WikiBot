@@ -1,7 +1,10 @@
-import discord,os,sys,random,requests
+import discord,os,sys,requests
 from discord.ext import commands
 import wikipediaapi
 import json
+import plots
+from datetime import date
+from datetime import timedelta
 
 def get_env_var(key):
   return os.environ[key]
@@ -23,6 +26,9 @@ class WikiBot(object):
     self.wiki_category_url = "https://en.wikipedia.org/wiki/Category:{0}"
     self.wiki_pageviews_url = "https://en.wikipedia.org/w/api.php?action=query&titles={0}&prop=pageviews&format=json"
     self.wiki_external_links_url = "https://en.wikipedia.org/w/api.php?action=query&prop=extlinks&titles={0}"
+    self.wiki_revisions_url = "https://en.wikipedia.org/w/api.php?action=query&prop=revisions&titles={0}&rvlimit=15&rvprop=timestamp|user|comment&format=json"
+    self.wiki_random_url = "https://en.wikipedia.org/wiki/Special:Random"
+    self.wiki_cirrus_url = "https://en.wikipedia.org/w/api.php?action=query&prop=cirrusdoc&titles={0}&format=json"
 
     self.wiki_api = wikipediaapi.Wikipedia('en')
 
@@ -46,6 +52,16 @@ class WikiBot(object):
        return content["query"]["pages"][id]["pageviews"]
     except:
       return False
+
+  def generate_pageview_chart(self,title):
+    views = self.get_pageviews(title)
+    xdata = [str(date.today()-timedelta(days=i))[6:] for i in range(0,len(views.keys())+1,10)]
+    ydata = list(views.values())
+    xdata.reverse()
+    ctitle = "Last 60 day pageviews for article \"{0}\" ({1})".format(title,date.today())
+    xlabel = "Day"
+    ylabel = "Views"
+    plots.create_bar_chart(ctitle,xlabel,ylabel,xdata,ydata)
     
 
 
@@ -327,7 +343,7 @@ class WikiBot(object):
       header = "Links here"
       await self.paginate(ctx,wiki_object, header,text)
     elif(query == "info"):
-      embed = discord.Embed(title=title,url=wiki_object.fullurl, color=0xae99bd,type="rich")
+      embed = discord.Embed(title=title,url=wiki_object.fullurl, description=self.get_sentences(wiki_object.summary)[0]+".",color=0xae99bd,type="rich")
       thumb_url = self.get_thumbnail(wiki_object.title)
       if(thumb_url != None):
         embed.set_image(url=thumb_url)
@@ -335,6 +351,7 @@ class WikiBot(object):
       watchers = wiki_object.watchers
       views = self.get_pageviews(title)
       avg_views = sum(views.values())//len(views.values())
+      self.generate_pageview_chart(title)
 
       embed.add_field(name="Popularity",value=popularity,inline=False)
       embed.add_field(name="Watchers",value=watchers,inline=False)
@@ -397,6 +414,18 @@ class WikiBot(object):
         embed.add_field(name="Issue:", value="A search for articles about \"{0}\" return 0 results".format(title), inline=False)
         embed.add_field(name="Solution:", value="Try a new search!", inline=False)
         await ctx.send(None,embed=embed)
+
+    @self.client.command(pass_context=True)
+    async def random(ctx):
+      url = requests.get(self.wiki_random_url).url
+      title = url.split("/")[-1]
+      wiki_object = self.wiki_api.page(title.replace(" ","_"))
+      text = (self.get_sentences(wiki_object.summary)[0])+"."
+      embed = discord.Embed(title=wiki_object.title,url=url,description=text, color=0xae99bd,type="rich")
+      thumb_url = self.get_thumbnail(wiki_object.title)
+      if(thumb_url != None):
+        embed.set_image(url=thumb_url)
+      await ctx.send(None,embed=embed)
 
     @self.client.command(pass_context=True)
     async def getpage(ctx,title,*args):
