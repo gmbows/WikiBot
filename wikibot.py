@@ -29,6 +29,7 @@ class WikiBot(object):
     self.wiki_revisions_url = "https://en.wikipedia.org/w/api.php?action=query&prop=revisions&titles={0}&rvlimit=15&rvprop=timestamp|user|comment&format=json"
     self.wiki_random_url = "https://en.wikipedia.org/wiki/Special:Random"
     self.wiki_cirrus_url = "https://en.wikipedia.org/w/api.php?action=query&prop=cirrusdoc&titles={0}&format=json"
+    self.wiki_most_viewed_url = "https://en.wikipedia.org/w/api.php?action=query&generator=mostviewed&prop=pageviews&format=json"
 
     self.wiki_api = wikipediaapi.Wikipedia('en')
 
@@ -42,6 +43,25 @@ class WikiBot(object):
     self.init_events()
 
     self.client.run(self.TOKEN)
+
+  def get_most_viewed_pages(self):
+    #returns list of tuples (wiki_object,views) 
+    rank = []
+    content = json.loads(requests.get(self.wiki_most_viewed_url).content)
+    pages = content["query"]["pages"]
+    for pageid in pages.keys():
+      tup = self.wiki_api.page(pages[pageid]["title"].replace(" ","_")),pages[pageid]["pageviews"][list(pages[pageid]["pageviews"].keys())[-1]]
+      rank.append(tup)
+    return rank
+
+  def get_extract(self,wiki_object):
+    sentence = (self.get_sentences(wiki_object.summary)[0])+"."
+    blurb = wiki_object.summary[0:160]
+    blurb = " ".join(blurb.split(" ")[0:-1])
+    if(blurb[-1] == "."):
+      blurb = blurb[:-1]
+    blurb += "..."
+    return (sentence if (len(sentence) > 100) else blurb)
 
   def normalize_pageviews(self,view_dict):
     for key in view_dict.keys():
@@ -70,10 +90,20 @@ class WikiBot(object):
     plots.create_bar_chart(ctitle,xlabel,ylabel,xdata,ydata)
     
 
+  def get_cirrus_popularity(self,wiki_object):
+    data = json.loads(requests.get(self.wiki_cirrus_url.format(wiki_object.title)).content)
+    try:
+      pageids = data["query"]["pages"].keys()
+      for pageid in pageids:
+        return data["query"]["pages"][pageid]["cirrusdoc"][0]["source"]["popularity_score"]
+    except:
+      return None
 
   def get_popularity(self,wiki_object):
     title = self.get_redirect(wiki_object.title)
     titles = self.get_links_to_titles(title)
+    if(titles == False):
+      return None
 
     backlinks = 0
     keys = wiki_object.links.keys()
@@ -126,7 +156,7 @@ class WikiBot(object):
       for id in pageid:
         return file_data["query"]["pages"][id]["imageinfo"][0]["url"]
     except:
-      print("Error")
+      print("Error fetching thumbnail for page {0}".format(title))
       return None
     return None
 
@@ -278,14 +308,14 @@ class WikiBot(object):
       await ctx.send(wiki_object.summary[0:100])
     elif(query == "overview"):
       url = wiki_object.fullurl
-      text = (self.get_sentences(wiki_object.summary)[0])+"."
+      text = self.get_extract(wiki_object)
       if("may refer to:" in text or "may also refer to:" in text):
         #Disambiguation page
         await self.paginate(ctx,wiki_object, "Related Pages",["[{0}]({1})".format(key_name,self.base_wiki_url.format(key_name.replace(" ","_"))) for key_name in sorted(wiki_object.links.keys())])
         return
       else:
         #Non-disambiguation page
-        text = (self.get_sentences(wiki_object.summary)[0])+"."
+        text = self.get_extract(wiki_object)
         embed = discord.Embed(title=wiki_object.title,url=url,description=text, color=0xae99bd,type="rich")
         thumb_url = self.get_thumbnail(wiki_object.title)
         if(thumb_url != None):
@@ -349,26 +379,31 @@ class WikiBot(object):
       header = "Links here"
       await self.paginate(ctx,wiki_object, header,text)
     elif(query == "info"):
-      embed = discord.Embed(title=title,url=wiki_object.fullurl, description=self.get_sentences(wiki_object.summary)[0]+".",color=0xae99bd,type="rich")
+      embed = discord.Embed(title=title,url=wiki_object.fullurl, description=self.get_extract(wiki_object),color=0xae99bd,type="rich")
       thumb_url = self.get_thumbnail(wiki_object.title)
       if(thumb_url != None):
         embed.set_image(url=thumb_url)
       popularity = self.get_popularity(wiki_object)
+      cpopularity = int(self.get_cirrus_popularity(wiki_object)*100000000)
       watchers = wiki_object.watchers
       views = self.get_pageviews(title)
       avg_views = sum(views.values())//len(views.values())
       self.generate_pageview_chart(title)
       file = discord.File("chart.png")
+      print(self.get_most_viewed_pages())
 
       embed.set_image(url="attachment://chart.png")
-      embed.add_field(name="Popularity",value=popularity,inline=False)
+      embed.add_field(name="Popularity",value=popularity,inline=True)
+      embed.add_field(name="Popularity (CirrusSearch Score)",value=str(cpopularity)+" ([What is this?](https://www.mediawiki.org/wiki/Extension:CirrusSearch/Scoring#Rescoring))",inline=True)
       embed.add_field(name="Watchers",value=watchers,inline=False)
-      embed.add_field(name="Sections",value=len(self.get_sections(wiki_object.sections)),inline=False)
-      embed.add_field(name="Categories",value=len(wiki_object.categories),inline=False)
-      embed.add_field(name="Links",value=len(wiki_object.links),inline=False)
+      embed.add_field(name="Sections",value=len(self.get_sections(wiki_object.sections)),inline=True)
+      embed.add_field(name="Categories",value=len(wiki_object.categories),inline=True)
+      embed.add_field(name="Links",value=len(wiki_object.links),inline=True)
       embed.add_field(name="Average daily pageviews / 60 days",value=avg_views,inline=False)
 
       await ctx.send(None,file=file,embed=embed)
+      os.remove("chart.png") 
+
     else:
       section_query = query
       section = self.get_section(wiki_object,section_query)
@@ -398,7 +433,7 @@ class WikiBot(object):
       result_titles = self.search_article_title_from_token(title,5)
 
       feeling_lucky = 1 in [arg == "!" for arg in args]
-      if(feeling_lucky and result_titles != False and len(result_titles) > 1):
+      if(feeling_lucky and result_titles != False):
         largs = list(args)
         largs.remove("!")
         args = tuple(largs)
@@ -425,16 +460,17 @@ class WikiBot(object):
         await ctx.send(None,embed=embed)
 
     @self.client.command(pass_context=True)
-    async def random(ctx):
+    async def random(ctx,*args):
       url = requests.get(self.wiki_random_url).url
       title = url.split("/")[-1]
+      query = "overview"
+      if(len(args) > 0):
+        query = args[0]
       wiki_object = self.wiki_api.page(title.replace(" ","_"))
-      text = (self.get_sentences(wiki_object.summary)[0])+"."
-      embed = discord.Embed(title=wiki_object.title,url=url,description=text, color=0xae99bd,type="rich")
-      thumb_url = self.get_thumbnail(wiki_object.title)
-      if(thumb_url != None):
-        embed.set_image(url=thumb_url)
-      await ctx.send(None,embed=embed)
+      if not wiki_object.exists():
+        print("Error fetching article {0}".format(url))
+        return
+      await self.parse(ctx, wiki_object,query,args)
 
     @self.client.command(pass_context=True)
     async def getpage(ctx,title,*args):
@@ -449,6 +485,40 @@ class WikiBot(object):
         await self.parse(ctx, wiki_object,query,args)
       else:
         embed = discord.Embed(title="Oh no!", color=0xEE8700,type="rich")
-        embed.add_field(name="Issue:", value="Article {0} not found".format(title), inline=False)
+        embed.add_field(name="Issue:", value="Article \"{0}\" not found".format(title), inline=False)
         embed.add_field(name="Solution:", value="Use `!search \"{0}\"` to search for articles with this title.".format(title), inline=False)
         await ctx.send(None,embed=embed)
+    @self.client.command(pass_context=True)
+    async def top10(ctx):
+      pages = self.get_most_viewed_pages()
+      embed = discord.Embed(title="Top 10 most viewed pages for {0}: ".format(date.today()), color=0xae99bd,type="rich")
+      i=1
+      invalid = 0
+      for page in pages:
+        if(not page[0].exists()):
+          title = page[0].title
+          if(title == "Special:Search"):
+            title = "Wikipedia Search"
+            desc = "This is the Wikipedia search page."
+            url = "https://en.wikipedia.org/wiki/Special:Search"
+            views = page[1]
+            embed.add_field(name="{0} ({1} views)".format(title,views), value="{1}. [(Link)]({0}) ".format(url,i)+desc, inline=False)
+          else:
+            invalid+=1
+          continue
+        try:
+          i+=1
+          title = page[0].title
+          desc = self.get_extract(page[0])
+          url = page[0].fullurl
+          views = page[1]
+        except:
+          if(title == "Main Page"):
+            desc = "This is the Wikipedia homepage."
+            url = page[0].fullurl
+            embed.add_field(name="{0} ({1} views)".format(title,views), value="{1}. [(Link)]({0}) ".format(url,i)+desc, inline=False)
+          continue
+        embed.add_field(name="{0} ({1} views)".format(title,views), value="{1}. [(Link)]({0}) ".format(url,i)+desc, inline=False)
+      if(invalid > 0):
+        embed.description = "Omitted {0} invalid or meta result(s).".format(invalid)
+      await ctx.send(None,embed=embed)
