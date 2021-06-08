@@ -17,6 +17,9 @@ def search_wiki(url):
 class WikiBot(object):
 	def __init__(self):
 
+		self.white = 0xffffff
+		self.orange = 0xEE8700
+
 		self.base_wiki_url = "https://en.wikipedia.org/wiki/{0}" #title
 		self.wiki_search_url = "https://en.wikipedia.org/w/api.php?action=opensearch&search={0}&limit={1}&namespace=0&format=json"
 		self.wiki_redirect_url = "https://en.wikipedia.org/w/api.php?action=query&format=json&titles={0}&redirects"
@@ -154,7 +157,7 @@ class WikiBot(object):
 		if not heading:
 			header = "\u200b"
 
-		embed = discord.Embed(title=title,url=url,description=desc, color=0xae99bd,type="rich")
+		embed = discord.Embed(title=title,url=url,description=desc, color=self.white,type="rich")
 		this_field = []
 		overflow = False
 		total=len(embed)
@@ -281,7 +284,7 @@ class WikiBot(object):
 			else:
 				#Non-disambiguation page
 				text = article.get_extract()
-				embed = discord.Embed(title=article.display_title,url=article.url,description=text, color=0xae99bd,type="rich")
+				embed = discord.Embed(title=article.display_title,url=article.url,description=text, color=self.white,type="rich")
 				thumb_url = article.get_thumbnail()
 				if(thumb_url != None):
 					embed.set_image(url=thumb_url)
@@ -319,7 +322,7 @@ class WikiBot(object):
 			if(len(article.links.keys()) > 100):
 				if(len(args) < 2 or args[1] != "conf"):
 					text = "There are {1} links on this page. Running this command will send approximately {0} messages.".format(int(len(article.links.keys())/(18*3)),len(article.links.keys()))
-					embed = discord.Embed(title="Oh no!", color=0xEE8700,type="rich")
+					embed = discord.Embed(title="Oh no!", color=self.orange,type="rich")
 					embed.add_field(name="Issue:", value=text, inline=False)
 					embed.add_field(name="Solution:", value="Use `!search \"{0}\" links conf` to display them anyway.".format(article.title))
 					await ctx.send(None,embed=embed)
@@ -344,7 +347,7 @@ class WikiBot(object):
 			header = "Links here"
 			await self.paginate(ctx,article, header,text)
 		elif(query == "info"):
-			embed = discord.Embed(title=article.display_title,url=article.url, description=article.get_extract(),color=0xae99bd,type="rich")
+			embed = discord.Embed(title=article.display_title,url=article.url, description=article.get_extract(),color=self.white,type="rich")
 			thumb_url = article.get_thumbnail()
 			if(thumb_url != None):
 				embed.set_image(url=thumb_url)
@@ -388,7 +391,7 @@ class WikiBot(object):
 				await self.paginate(ctx,article, header,text,title=section.title+" ("+article.display_title+")",url=article.url+"#"+section.title.replace(" ","_"),lines=False,heading=False)
 				#await ctx.send(None,embed=embed)
 			else:
-				embed = discord.Embed(title="Oh no!", color=0xEE8700,type="rich")
+				embed = discord.Embed(title="Oh no!", color=self.orange,type="rich")
 				embed.add_field(name="Query:", value="`!search \"{0}\" {1}`".format(article.title," ".join(args)), inline=False)
 				embed.add_field(name="Issue:", value="Section \"{0}\" not found in article [{1}]({2})".format(section_query,article.title,wiki_object.fullurl), inline=False)
 				embed.add_field(name="Solution:", value="Use `!search \"{0}\" sections` for a list of sections in this article".format(article.title), inline=False)
@@ -425,12 +428,12 @@ class WikiBot(object):
 				await self.parse(ctx, article,query,args)
 			elif(result_titles != False and len(result_titles) > 0):
 				articles = [Article(result_title) for result_title in result_titles]
-				embed = discord.Embed(title="Top 5 results for: "+title, color=0xae99bd,type="rich")
+				embed = discord.Embed(title="Top 5 results for: "+title, color=self.white,type="rich")
 				for article in articles:
 					embed.add_field(name=article.title, value="[(Link)]({0}) ".format(article.url)+article.get_extract(), inline=False)
 				await ctx.send(None,embed=embed)
 			else:
-				embed = discord.Embed(title="Oh no!", color=0xEE8700,type="rich")
+				embed = discord.Embed(title="Oh no!", color=self.orange,type="rich")
 				embed.add_field(name="Query:", value="`!search {0} {1}`".format(title," ".join(args)), inline=False)
 				embed.add_field(name="Issue:", value="A search for articles about \"{0}\" return 0 results.".format(title), inline=False)
 				embed.add_field(name="Solution:", value="Try a new search!", inline=False)
@@ -448,7 +451,7 @@ class WikiBot(object):
 
 			if not article.exists():
 				print("Error fetching article {0}".format(url))
-				embed = discord.Embed(title="Oh no!", color=0xEE8700,type="rich")
+				embed = discord.Embed(title="Oh no!", color=self.orange,type="rich")
 				embed.add_field(name="Issue:", value="Unable to display article [{0}]({1}) because its url is malformed or contains special characters.".format(article.title,url), inline=False)
 				embed.add_field(name="Solution:", value="Try another article!", inline=False)
 				await ctx.send(None,embed=embed)
@@ -467,7 +470,7 @@ class WikiBot(object):
 			if(article.exists()):
 				await self.parse(ctx, article,query,args)
 			else:
-				embed = discord.Embed(title="Oh no!", color=0xEE8700,type="rich")
+				embed = discord.Embed(title="Oh no!", color=self.orange,type="rich")
 				embed.add_field(name="Issue:", value="Article \"{0}\" not found".format(title), inline=False)
 				embed.add_field(name="Solution:", value="Use `!search \"{0}\"` to search for articles with this title.".format(title), inline=False)
 				await ctx.send(None,embed=embed)
@@ -475,12 +478,12 @@ class WikiBot(object):
 		async def top10(ctx):
 			pages = self.get_most_viewed_pages()
 			if(pages == None):
-				embed = discord.Embed(title="Oh no!", color=0xEE8700,type="rich")
+				embed = discord.Embed(title="Oh no!", color=self.orange,type="rich")
 				embed.add_field(name="Issue:", value="Unable to fetch top 10 pages", inline=False)
 				embed.add_field(name="Solution:", value="Try again later!", inline=False)
 				await ctx.send(None,embed=embed)
 				return
-			embed = discord.Embed(title="Top 10 most viewed pages for {0}: ".format(date.today()), color=0xae99bd,type="rich")
+			embed = discord.Embed(title="Top 10 most viewed pages for {0}: ".format(date.today()), color=self.white,type="rich")
 			i=1
 			invalid = 0
 			for page in pages:
