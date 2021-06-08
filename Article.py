@@ -133,9 +133,14 @@ class Article(object):
 		content = json.loads(requests.get(self.wiki_redirect_url.format(title)).content)
 		try:
 			redirects = content["query"]["redirects"]
+			return redirects[0]["to"]
 		except:
-			return title
-		return redirects[0]["to"]
+			try:
+				normalized = content["query"]["normalized"]
+				return normalized[0]["to"]
+			except:
+				return title
+		return title
 
 	def get_thumbnail_alt(self):
 		filename = None

@@ -5,7 +5,7 @@
 
 *Above: `!getpage replit info`*
 
-WikiBot is a Discord bot built using Replit. WikiBot allows users to quickly and easily search for and display Wikipedia articles, as well as providing access to most functionality in the WikiMedia API. In addition, users can
+WikiBot is a Discord bot built using Replit. WikiBot allows users to quickly and easily search for and display Wikipedia articles, and it provides access to most functionality in the WikiMedia API. In addition, users can
 specify an article title and a section or heading in the article, and WikiBot will send the section text to the server as an embed.
 
 ## Usage
@@ -17,11 +17,11 @@ A WikiBot command consists of two parts.  The aquisition of an article, and argu
 
 An article can be acquired through several different commands:
 
-`!search "article name" !`: The ! character instructs WikiBot to select the top result from this query. If there are multiple results and a ! character is not present, an article will not be selected, and WikiBot will simply display the search results.
+* `!search "article name" !`: The ! character instructs WikiBot to select the top result from this query. If there are multiple results and a ! character is not present, an article will not be selected, and WikiBot will simply display the search results.
 
-`!getpage articlename`: Selects an article directly.  Title will be normalized (removes punctuation characters and capitalizes) and redirected if applicable, but must otherwise be an exact match.
+* `!getpage articlename`: Select an article directly.  Title will be normalized (removes punctuation characters and capitalizes) and redirected if applicable, but must otherwise be an exact match.
 
-`!random`: Selects a random Wikipedia article.
+* `!random`: Select a random Wikipedia article.
 
 Once an article is selected, additional arguments (see below) can be provided to specify what information to display.
 
@@ -34,7 +34,7 @@ Once an article has been selected (see above) users can provide additional argum
 `!getpage replit overview`: Select the [Replit](https://en.wikipedia.org/wiki/Replit) Wikipedia article, and provide a short summary.  This is the default argument if no other arguments are provided.
 
 #### Sections (List)
-`!getpage olm sections`: List the sections present in the [Olm](https://en.wikipedia.org/wiki/Olm) article.
+`!getpage olm sections`: List the sections present in the [Olm](https://en.wikipedia.org/wiki/Olm) article.  Subsections will be formatted based on their level (section heading, subsection, sub-subection, etc.). Section queries on section headings that have subections but no text themselves will display a brief summary of each subsection.
 
 #### Section (By name)
 `!getpage olm etymology`: Display the [Etymology](https://en.wikipedia.org/wiki/Olm#Etymology) section from the [Olm](https://en.wikipedia.org/wiki/Olm) article. Section titles are autocompleted. An error is produced if the provided section is not present in the selected article (see note above).
