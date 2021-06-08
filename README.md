@@ -1,6 +1,7 @@
 
 # WikiBot
 ![image](https://raw.githubusercontent.com/gmbows/WikiBot/master/replit.PNG)
+
 *Above: `!getpage replit info`*
 
 WikiBot is a Discord bot built using Replit. WikiBot allows users to quickly and easily search for and display Wikipedia articles, as well as providing access to most functionality in the WikiMedia API. In addition, users can
