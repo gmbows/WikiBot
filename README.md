@@ -1,6 +1,7 @@
 
 # WikiBot
-![image](https://raw.githubusercontent.com/gmbows/WikiBot/master/replit.PNG)
+
+![image](https://raw.githubusercontent.com/gmbows/WikiBot/master/r2.PNG | = 240x240)
 
 *Above: `!getpage replit info`*
 
