@@ -1,4 +1,8 @@
+
 # WikiBot
+![image](https://raw.githubusercontent.com/gmbows/WikiBot/master/replit.PNG)
+*Above: `!getpage replit info`*
+
 WikiBot is a Discord bot built using Replit. WikiBot allows users to quickly and easily search for and display Wikipedia articles, as well as providing access to most functionality in the WikiMedia API. In addition, users can
 specify an article title and a section or heading in the article, and WikiBot will send the section text to the server as an embed.
 
@@ -63,4 +67,3 @@ Once an article has been selected (see above) users can provide additional argum
 ## Notes
 ### Disambiguation pages
 Disambiguation pages may be acquired periodically through normal searches or getpage queries. To select a disambiguation page directly, users can simply try `!search "frog disambig" !` (note the ! character) and special formatting will be used to display the potential disambiguations.
- 
