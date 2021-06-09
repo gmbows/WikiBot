@@ -137,12 +137,13 @@ class WikiBot(object):
 				if(not wiki_object.exists()):
 					print("error",link_text)
 					continue
-				text = text.replace(" "+link_text+" "," [{0}]({1}) ".format(link_text,wiki_object.fullurl),1)
-				text = text.replace(" "+link_text+","," [{0}]({1}),".format(link_text,wiki_object.fullurl),1)
-				text = text.replace(" "+link_text+"."," [{0}]({1}).".format(link_text,wiki_object.fullurl),1)
-				text = text.replace(" "+link_text.lower()+"."," [{0}]({1}).".format(link_text.lower(),wiki_object.fullurl),1)
-				text = text.replace(" "+link_text.lower()+","," [{0}]({1}),".format(link_text.lower(),wiki_object.fullurl),1)
-				text = text.replace(" "+link_text.lower()+" "," [{0}]({1}) ".format(link_text.lower(),wiki_object.fullurl),1)
+				for punct in [",","."," "]:
+				#text = text.replace(" "+link_text+" "," [{0}]({1}) ".format(link_text,wiki_object.fullurl),1)
+				#text = text.replace(" "+link_text+","," [{0}]({1}),".format(link_text,wiki_object.fullurl),1)
+					text = text.replace(" "+link_text+punct," [{0}]({1}){2}".format(link_text,wiki_object.fullurl,punct),1)
+					text = text.replace(" "+link_text.lower()+punct," [{0}]({1}){2}".format(link_text.lower(),wiki_object.fullurl,punct),1)
+				#text = text.replace(" "+link_text.lower()+","," [{0}]({1}),".format(link_text.lower(),wiki_object.fullurl),1)
+				#text = text.replace(" "+link_text.lower()+" "," [{0}]({1}) ".format(link_text.lower(),wiki_object.fullurl),1)
 		return text
 
 	def get_sentences(self,text):
@@ -255,8 +256,6 @@ class WikiBot(object):
 					reading_link = True
 				if(line[-1] == ")" and reading_link):
 					reading_link = False
-			print(line)
-		print(this_field)
 		if(overflow and heading):
 			temp_header = header+" (fin.)"
 		if(len(this_field) > 0):
@@ -275,9 +274,7 @@ class WikiBot(object):
 		if("may refer to:" in text):
 			print("DISAMBIGUABLE")
 			#title += " (disambiguation)"
-		if(query == "summary"):
-			await ctx.send("Not implemented yet!")
-		elif(query == "overview"):
+		if(query == "overview"):
 			text = article.get_extract()
 			if("may refer to:" in text or "may also refer to:" in text):
 				#Disambiguation page
@@ -298,7 +295,7 @@ class WikiBot(object):
 			text = []
 			article_url = article.url
 
-			for section in self.get_section_titles(wiki_object.sections):
+			for section in self.get_section_titles(article.sections):
 				if(section[0] > 0):
 					newtext = ("    "*section[0])+"└[{0}]({1})".format(section[1],article_url+"#"+section[1].replace(" ","_"))
 				else:

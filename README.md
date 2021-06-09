@@ -13,6 +13,11 @@ WikiBot can be used in discussions to quickly display relevant information that 
 A basic search is performed by running the command `!search "article name"`.
 
 ## Parsing
+
+![image](https://raw.githubusercontent.com/gmbows/WikiBot/master/search.PNG)
+
+*Above: `!search frogs ! sections`*
+
 A WikiBot command consists of two parts.  The selection of an article, and arguments that specify what information to display from or about the article.
 
 An article can be acquired through several different commands:
