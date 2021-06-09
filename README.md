@@ -14,7 +14,7 @@ A basic search is performed by running the command `!search "article name"`.
 
 ## Parsing
 
-![image](https://raw.githubusercontent.com/gmbows/WikiBot/master/search.PNG)
+![search](https://raw.githubusercontent.com/gmbows/WikiBot/master/search.PNG)
 
 *Above: `!search frogs ! sections`*
 
@@ -42,6 +42,11 @@ Once an article has been selected (see above) users can provide additional argum
 `!getpage olm sections`: List the sections present in the [Olm](https://en.wikipedia.org/wiki/Olm) article.  Subsections will be formatted based on their level (section heading, subsection, sub-subsection, etc.). Section queries on section headings that have subsections but no text themselves will display a brief summary of each subsection.
 
 #### Section (By name)
+
+![search](https://raw.githubusercontent.com/gmbows/WikiBot/master/hardness.PNG)
+
+*Above: `!getpage diamond hardness`*
+
 `!getpage olm etymology`: Display the [Etymology](https://en.wikipedia.org/wiki/Olm#Etymology) section from the [Olm](https://en.wikipedia.org/wiki/Olm) article. Section titles are autocompleted. An error is produced if the provided section is not present in the selected article (see note above).
 
 #### Info
