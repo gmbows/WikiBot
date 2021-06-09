@@ -41,13 +41,13 @@ Once an article has been selected (see above) users can provide additional argum
 
 ![search](https://raw.githubusercontent.com/gmbows/WikiBot/master/search.PNG)
 
-`!search frogs ! sections`: List the sections present in the [Frog](https://en.wikipedia.org/wiki/Frog) article.  Subsections will be formatted based on their level (section heading, subsection, sub-subsection, etc.). Section queries on section headings that have subsections but no text themselves will display a brief summary of each subsection.
+`!search frogs ! sections`: List the sections present in the [Frog](https://en.wikipedia.org/wiki/Frog) article.  Subsections will be formatted based on their level (section heading, subsection, sub-subsection, etc.).
 
 #### Section (By name)
 
 ![hardness](https://raw.githubusercontent.com/gmbows/WikiBot/master/hardness.PNG)
 
-`!getpage diamond hardness`: Display the [Hardness](https://en.wikipedia.org/wiki/Diamond#Hardness) section from the [Diamond](https://en.wikipedia.org/wiki/Diamond) article. Section titles are autocompleted. An error is produced if the provided section is not present in the selected article (see note above).
+`!getpage diamond hardness`: Display the [Hardness](https://en.wikipedia.org/wiki/Diamond#Hardness) section from the [Diamond](https://en.wikipedia.org/wiki/Diamond) article. Section titles are autocompleted. Section queries on section headings that have subsections but no text themselves will display a brief summary of each subsection. An error is produced if the provided section is not present in the selected article (see note above).
 
 #### Info
 
