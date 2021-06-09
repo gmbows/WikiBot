@@ -6,14 +6,14 @@
 *Above: `!getpage replit info`*
 
 WikiBot is a Discord bot built using Replit. WikiBot allows users to quickly and easily search for and display Wikipedia articles, and it provides access to most functionality in the WikiMedia API. In addition, users can
-specify an article title and a section or heading in the article, and WikiBot will send the section text to the server as an embed.
+specify an article title and a section or heading, and WikiBot will send the section text to the server as an embed.
 
 ## Usage
 WikiBot can be used in discussions to quickly display relevant information that users would otherwise have to find independently.
 A basic search is performed by running the command `!search "article name"`.
 
 ## Parsing
-A WikiBot command consists of two parts.  The aquisition of an article, and arguments that specify what information to display from or about the article.
+A WikiBot command consists of two parts.  The selection of an article, and arguments that specify what information to display from or about the article.
 
 An article can be acquired through several different commands:
 
@@ -34,7 +34,7 @@ Once an article has been selected (see above) users can provide additional argum
 `!getpage replit overview`: Select the [Replit](https://en.wikipedia.org/wiki/Replit) Wikipedia article, and provide a short summary.  This is the default argument if no other arguments are provided.
 
 #### Sections (List)
-`!getpage olm sections`: List the sections present in the [Olm](https://en.wikipedia.org/wiki/Olm) article.  Subsections will be formatted based on their level (section heading, subsection, sub-subection, etc.). Section queries on section headings that have subections but no text themselves will display a brief summary of each subsection.
+`!getpage olm sections`: List the sections present in the [Olm](https://en.wikipedia.org/wiki/Olm) article.  Subsections will be formatted based on their level (section heading, subsection, sub-subsection, etc.). Section queries on section headings that have subsections but no text themselves will display a brief summary of each subsection.
 
 #### Section (By name)
 `!getpage olm etymology`: Display the [Etymology](https://en.wikipedia.org/wiki/Olm#Etymology) section from the [Olm](https://en.wikipedia.org/wiki/Olm) article. Section titles are autocompleted. An error is produced if the provided section is not present in the selected article (see note above).
@@ -53,10 +53,10 @@ Once an article has been selected (see above) users can provide additional argum
 ## Commands
 
 #### Search
-`!search frogs`: Display a list of the top 5 or fewer results for the query `frogs` in the Wikipedia search API.  IF there is only one result, WikiBot will display the overview for this article unless additional arguments are present.
+`!search frogs`: Display a list of the top 5 or fewer results for the query `frogs` in the Wikipedia search API.  If there is only one result, WikiBot will display the overview for this article unless additional arguments are present.
 
 #### Getpage
-`!getpage "richard stallman"`: Display an overview of the article [Richard Stallman](https://en.wikipedia.org/wiki/Richard_Stallman), unless additional arguments are present.
+`!getpage "richard stallman"`: Display an overview of the article [Richard Stallman](https://en.wikipedia.org/wiki/Richard_Stallman) unless additional arguments are present.
 
 #### Random
 `!random`: Display the overview of a [random Wikipedia article](https://en.wikipedia.org/wiki/Special:Random) unless additional arguments are present.

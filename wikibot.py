@@ -255,6 +255,8 @@ class WikiBot(object):
 					reading_link = True
 				if(line[-1] == ")" and reading_link):
 					reading_link = False
+			print(line)
+		print(this_field)
 		if(overflow and heading):
 			temp_header = header+" (fin.)"
 		if(len(this_field) > 0):
