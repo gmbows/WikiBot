@@ -14,10 +14,6 @@ A basic search is performed by running the command `!search "article name"`.
 
 ## Parsing
 
-![search](https://raw.githubusercontent.com/gmbows/WikiBot/master/search.PNG)
-
-*Above: `!search frogs ! sections`*
-
 A WikiBot command consists of two parts.  The selection of an article, and arguments that specify what information to display from or about the article.
 
 An article can be acquired through several different commands:
@@ -36,10 +32,16 @@ Once an article has been selected (see above) users can provide additional argum
 *Note: If a non-named argument is provided after an article is acquried, WikiBot will assume this argument is a section title.*
 
 #### Overview
+
+![replit](https://raw.githubusercontent.com/gmbows/WikiBot/master/replit.PNG)
+
 `!getpage replit overview`: Select the [Replit](https://en.wikipedia.org/wiki/Replit) Wikipedia article, and provide a short summary.  This is the default argument if no other arguments are provided.
 
 #### Sections (List)
-`!getpage olm sections`: List the sections present in the [Olm](https://en.wikipedia.org/wiki/Olm) article.  Subsections will be formatted based on their level (section heading, subsection, sub-subsection, etc.). Section queries on section headings that have subsections but no text themselves will display a brief summary of each subsection.
+
+![search](https://raw.githubusercontent.com/gmbows/WikiBot/master/search.PNG)
+
+`!search frogs ! sections`: List the sections present in the [Frog](https://en.wikipedia.org/wiki/Frog) article.  Subsections will be formatted based on their level (section heading, subsection, sub-subsection, etc.). Section queries on section headings that have subsections but no text themselves will display a brief summary of each subsection.
 
 #### Section (By name)
 
