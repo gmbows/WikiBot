@@ -43,11 +43,9 @@ Once an article has been selected (see above) users can provide additional argum
 
 #### Section (By name)
 
-![search](https://raw.githubusercontent.com/gmbows/WikiBot/master/hardness.PNG)
+![hardness](https://raw.githubusercontent.com/gmbows/WikiBot/master/hardness.PNG)
 
-*Above: `!getpage diamond hardness`*
-
-`!getpage olm etymology`: Display the [Etymology](https://en.wikipedia.org/wiki/Olm#Etymology) section from the [Olm](https://en.wikipedia.org/wiki/Olm) article. Section titles are autocompleted. An error is produced if the provided section is not present in the selected article (see note above).
+`!getpage diamond hardness`: Display the [Hardness](https://en.wikipedia.org/wiki/Diamond#Hardness) section from the [Diamond](https://en.wikipedia.org/wiki/Diamond) article. Section titles are autocompleted. An error is produced if the provided section is not present in the selected article (see note above).
 
 #### Info
 `!search replit ! info`: Search for token "replit", select the first result, and display information about the page, including a generic popularity score (the number of one-way [backlinks](https://en.wikipedia.org/wiki/Backlink) in the page), the number of watchers, links, categories, and sections, the article has, as well as the average pageviews over the last 60 days and a graph.
