@@ -335,8 +335,18 @@ class WikiBot(object):
 
 			header = "Links"
 			await self.paginate(ctx,article, header,text)
-		elif(query == "linksto"):
+		elif(query == "linkshere"):
 			titles = article.get_links_to_titles()
+
+			if(len(titles) > 100):
+				if(len(args) < 2 or args[1] != "conf"):
+					text = "There are {1} links on this page. Running this command will send approximately {0} messages.".format(int(len(titles)/(18*3)),len(titles))
+					embed = discord.Embed(title="Oh no!", color=self.orange,type="rich")
+					embed.add_field(name="Issue:", value=text, inline=False)
+					embed.add_field(name="Solution:", value="Use `!search \"{0}\" linkshere conf` to display them anyway.".format(article.title))
+					await ctx.send(None,embed=embed)
+					return
+
 			text = []
 
 			for article_title in titles:

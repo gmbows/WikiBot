@@ -59,7 +59,10 @@ Once an article has been selected (see above) users can provide additional argum
 `!getpage mineral categories`: Display a list of categories that the [Mineral](https://en.wikipedia.org/wiki/Mineral) article is present in.
 
 #### Links
-`!random links`: Select an article at random, and display the links present in the article.
+`!random links`: Select an article at random, and display the list of articles linked to by this article.
+
+#### Linkshere
+`!random linkshere`: Select an article at random, and display the list of articles that link to this article.
 
 *Note: Due to the maximum embed size of 6000 characters, WikiBot will ask for confirmation if a command would require multiple messages to fit the full query result.* 
 
